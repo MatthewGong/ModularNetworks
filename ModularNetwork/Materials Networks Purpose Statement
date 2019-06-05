@@ -1,0 +1,20 @@
+Materials Networks
+
+Components:
+
+	Materials Data Loader Module,
+		The purpose of this module is to load common material data formats into pytorch dataloaders for ease of use in building and evaluating models. 
+
+	Modular Networks Module,
+		The purpose of this module is to create modular and extensible networks. The modular networks are meant to require minimal code to instantiate and should be able to be defined using a MadLib.
+ 
+	Modular Training Module
+		The purpose of this module is to provide utilities for easy training and debugging of modular networks. 
+
+	Transfer Learning Module (Optional)
+		The purpose of this module is to provide robustness to modular networks when portions of the input are removed by allowing for permutations of task module.
+
+	Materials Madlibs Module:
+		A simple text interface that walks the user through the creation, training, and evaluation of a modular network without the need to code.
+
+
