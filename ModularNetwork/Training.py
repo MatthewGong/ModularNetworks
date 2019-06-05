@@ -19,23 +19,22 @@ import customtorchsummary as torchsummary
 
 def train(dataloaded,verbose=True):
 
-	### ENVIRONMENT ###
+    ### ENVIRONMENT ###
 
-	# Hardware compatibility checks
-	CUDA = torch.cuda.is_available()
+    # Hardware compatibility checks
+    CUDA = torch.cuda.is_available()
 
-	DEVICE = "cuda" if CUDA else "cpu"
-	
-	# manage print functions
-	v_print = print if verbose else lambda *a, **k: None
+    DEVICE = "cuda" if CUDA else "cpu"
+    
+    # manage print functions
+    v_print = print if verbose else lambda *a, **k: None
 
-	### /ENVIROMENT ###
+    ### /ENVIROMENT ###
     
     ### DATASET CONSTRUCTION ###
 
-
     
-    #Augmentation
+    ## Augmentation ##
     
 
     ## Train Test Split ##
@@ -48,9 +47,9 @@ def train(dataloaded,verbose=True):
     neuralnetwork.to_device(device)
     
     if verbose:
-	    torchsummary.summary(full_net,input_size=[[(1,900)],[(1,118)]])
+        torchsummary.summary(full_net,input_size=[[(1,900)],[(1,118)]])
 
-	### /BUILD NETWORK ###
+    ### /BUILD NETWORK ###
 
     ### TRAINING PARAMS ###
     
@@ -60,7 +59,7 @@ def train(dataloaded,verbose=True):
 
     v_print("Batches: {}\nLearning Rate: {}\nEpochs: {}".format(BATCH,LR,EPOCHS))
 
-	loss_func = nn.CrossEntropyLoss().to_device(cuda)
+    loss_func = nn.CrossEntropyLoss().to_device(cuda)
     optimizer = torch.optim.SGD(neural.parameters(), lr=LR, momentum=0.9)
 
     ### /TRAINING PARAMS ###
