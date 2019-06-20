@@ -1,3 +1,4 @@
-from .ModularTraining import *
+from .Training import *
 from .DatasetAugmentation import *
-from .ModularNetGenerator import *
+from .NetGenerator import *
+from .NetManufacturing import *

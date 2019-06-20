@@ -5,70 +5,74 @@ import torchvision
 
 import numpy as np
 
-ELEMENTS_COUNT = 118
-BIN_COUNT = 540
-
-
-
 class Flatten2D(nn.Module):
+    """
+    Flattens a stacked 2D inputs into a 1D vector
+    """
     def forward(self,x):
         x = x.view(x.size()[0],1,-1)
         return x
 class Flatten1D(nn.Module):
+    """
+    Flattens all channels into one channel
+    """
     def forward(self,x):
         x = x.view(x.size()[0],-1)
         return x
 
+class BNConv2D(nn.Module):
+    """
+    A block of layers performing Batch Normalized Convolution
+    """
+    def __init__(self,in_f,out_f,p_size=2,k_size=3,
+        stride=1,activation=nn.ReLu()):
+        super(BNConv2D,self).__init__()
+
+        self.conv = nn.Conv2d(in_f,out_f,k_size,stride,padding=k_size/2)
+        self.pool = nn.MaxPool2d(p_size)
+        self.bn = nn.BatchNorm2d(out_f)
+        self.activation = activation
+
+    def forward(self,x):
+        x = self.activation(self.conv(x))
+        x = self.pool(x)
+
+        return self.bn(x)
+
+
 class BNConv1D(nn.Module):
-    def __init__(self,in_f,out_f,p_size=2,k_size=3,stride=1):
+    """
+    A block of layers performing Batch Normalized Convolution
+    """
+    def __init__(self,in_f,out_f,p_size=2,k_size=3,
+        stride=1,activation=nn.ReLu()):
         super(BNConv1D,self).__init__()
 
         self.conv = nn.Conv1d(in_f,out_f,k_size,stride,padding=k_size/2)
         self.pool = nn.MaxPool1d(p_size)
         self.bn = nn.BatchNorm1d(out_f)
-        self.relu = nn.ReLU()
+        self.activation = activation
 
     def forward(self,x):
-        x = self.relu(self.conv(x))
+        x = self.activation(self.conv(x))
         x = self.pool(x)
 
         return self.bn(x)
 
 
 class BNLinear(nn.Module):
-    def __init__(self,in_f,out_f):
+    """
+    A block of layers for Batch Normalized Dense operation
+    """
+    def __init__(self,in_f,out_f,activation=nn.Relu()):
         super(BNLinear,self).__init__()
         self.linear = nn.Linear(in_f,out_f)
         self.bn = nn.BatchNorm1d(self.linear.out_features)
-        self.relu = nn.ReLU()
+        self.activation = activation
 
     def forward(self,x):
-        x = self.relu(self.linear(x))
+        x = self.activation(self.linear(x))
         return self.bn(x)
-"""
-class BConv1D(nn.Module):
-    def __init__(self,in_f,out_f,p_size=2,k_size=3,stride=1):
-        super(BConv1D,self).__init__()
-
-        self.conv = nn.Conv1d(in_f,out_f,k_size,stride,padding=k_size/2)
-        self.pool = nn.MaxPool1d(p_size)
-        self.relu = nn.ReLU()
-
-    def forward(self,x):
-        x = self.relu(self.conv(x))
-        x = self.pool(x)
-
-        return x
-class BLinear(nn.Module):
-    def __init__(self,in_f,out_f):
-        super(BLinear,self).__init__()
-        self.linear = nn.Linear(in_f,out_f)
-        self.relu = nn.ReLU()
-
-    def forward(self,x):
-        x = self.relu(self.linear(x))
-        return x
-"""
 
 class DenseNet(nn.Module):
     def __init__(self,ps):
@@ -103,21 +107,45 @@ class ConvNet(nn.Module):
         return x
 
 class Classification(nn.Module):
-
+    """
+    A block of layers that return the softmax likelihood
+    of a given class.
+    """
     def __init__(self,ps_after):
         super(Classification,self).__init__()
-        self.classes = nn.ModuleList([BNLinear(ps_after[i],ps_after[i+1]) for i in range(len(ps_after)-1)])  
+        self.Dense = nn.ModuleList([BNLinear(ps_after[i],ps_after[i+1]) for i in range(len(ps_after)-1)])  
 
     def forward(self,z):
         
-        for i, l in enumerate(self.classes):
+        for i, l in enumerate(self.Dense):
             z = l(z)
 
         return z
         
+class Regression(nn.Module):
+    """
+    A block of layers that return the regressed value
+    """
+    def __init__(self,ps_after):
+        super(regression,self).__init__()
+        self.Dense = nn.ModuleList([BNLinear(ps_after[i],ps_after[i+1]) for i in range(len(ps_after)-1)])  
+
+    def forward(self,z):
+        
+        for i, l in enumerate(self.Dense):
+            z = l(z)
+
+        return z
 
 class HybridNet(nn.Module):
+    """
+    Creates a Network with Convolutional and Dense blocks
+    according to a list of parameter dictionaries for each
+    type of block
 
+    Concatenates the outputs of the different blocks and then 
+    performs the defined task. 
+    """
 
     def __init__(self,Conv_Params=[],Dense_Params=[],Task_params=None):
         super(HybridNet,self).__init__()
@@ -125,7 +153,8 @@ class HybridNet(nn.Module):
         self.ConvModules = nn.ModuleList([ConvNet(Conv_Params[i]) for i in range(len(Conv_Params))])
         self.DenseModules = nn.ModuleList([DenseNet(Dense_Params[i]) for i in range(len(Dense_Params))])
 
-        self.classes = Classification(Task_params)  
+        self.Task = Classification(Task_params)  
+
 
     def forward(self,conv,dense):
         
@@ -141,7 +170,7 @@ class HybridNet(nn.Module):
         # concatenate the last layers of the modules
         z = torch.cat(dense_out+conv_out,1)
         # run through the classification layers
-        z = self.classes(z)
+        z = self.Task(z)
 
         return z
 

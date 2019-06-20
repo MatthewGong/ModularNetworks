@@ -1,7 +1,7 @@
 import torch
 
 
-def chem_param_maker(num_layers,start=20,scale=1.3,mode="same",min_nodes=5,num_elements=118):
+def DenseParameters(num_layers,start=20,scale=1.3,mode="same",min_nodes=5,num_elements=118):
     """
     num layers, how many layers to make parameters for
     mode, how to make connections within layers
@@ -36,7 +36,7 @@ def chem_param_maker(num_layers,start=20,scale=1.3,mode="same",min_nodes=5,num_e
 
     return param
 
-def diff_param_maker(num_layers,start={"out":10,"stride":1,"k":2,"p":2,"length":900},
+def ConvolutionalParameters(num_layers,start={"out":10,"stride":1,"k":2,"p":2,"length":900},
                     scale=1.3,mode="same",min_nodes=5,num_bins=900):
     """
     num layers, how many layers to make parameters for
@@ -102,7 +102,7 @@ def diff_param_maker(num_layers,start={"out":10,"stride":1,"k":2,"p":2,"length":
 
     return params
 
-def after_param_maker(num_clases,num_layers,conv_params=[],dense_params=[],scale=1.3,mode="same",min_nodes=5):
+def TaskParameters(num_clases,num_layers,conv_params=[],dense_params=[],scale=1.3,mode="same",min_nodes=5):
     """
     num layers, how many layers to make parameters for
     mode, how to make connections within layers
@@ -110,16 +110,14 @@ def after_param_maker(num_clases,num_layers,conv_params=[],dense_params=[],scale
     """
     start = 0 
     for mod in conv_params:
-        #print(mod[-1]["out"]*mod[-1]["length"])
         start += mod[-1]["out"]*mod[-1]["length"]    
     for mod in dense_params:
-        #print(mod[-1])
         start += mod[-1]
 
     params = [start]
     
     number = start
-    #print(start)
+
     if mode =="same":
         for i in range(1,num_layers):
             params.append(number)
